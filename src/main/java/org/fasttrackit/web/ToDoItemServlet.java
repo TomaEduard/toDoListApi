@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 // servelul are rolul de a prelua datele si de a le trimite mai departe
@@ -22,19 +21,25 @@ public class ToDoItemServlet extends HttpServlet {
 
     private ToDoItemService toDoItemService = new ToDoItemService();
 
+    // Create
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SaveToDoItemRequest saveToDoItemRequest = objectMapper.readValue(req.getReader(), SaveToDoItemRequest.class);
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            SaveToDoItemRequest saveToDoItemRequest = objectMapper.readValue(req.getReader(), SaveToDoItemRequest.class);
             toDoItemService.createToDoItem(saveToDoItemRequest);
         } catch (Exception e) {
             resp.sendError(500, "Internal error: " + e.getMessage());
         }
     }
 
+    // Read
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
         try {
             List<ToDoItem> toDoItems = toDoItemService.getToDoItems();
 
@@ -54,6 +59,21 @@ public class ToDoItemServlet extends HttpServlet {
             resp.sendError(500, "There was an error processing your requet.");
             e.getMessage();
         }
+    }
+
+
+    //for Preflight request
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    private void setAccessControlHeaders(HttpServletResponse resp) {
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 
 }
